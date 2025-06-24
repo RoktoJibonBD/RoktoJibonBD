@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoktoJibonBD</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f8f8f8; padding-bottom: 70px; }
+    header { background: #c62828; color: white; padding: 20px 10px; text-align: center; }
+    .banner {
+      background: #1976D2;
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: white;
+      text-align: center;
+      padding: 0 20px;
+    }
+    .banner h2 {
+      margin: 0;
+      font-size: 1.8em;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+    .banner a {
+      background: white; 
+      color: #1976D2; 
+      padding: 10px 25px;
+      margin-top: 15px; 
+      text-decoration: none;
+      border-radius: 30px; 
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+    .banner a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .requests-section, .form-section {
+      padding: 20px; max-width: 1200px; margin: auto;
+    }
+    .requests-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 15px;
+    }
+    .request-card {
+      background: #fff; 
+      padding: 15px; 
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      width: calc(50% - 20px);
+      box-sizing: border-box;
+      border-top: 4px solid #c62828;
+      transition: transform 0.3s ease;
+    }
+    .request-card:hover {
+      transform: translateY(-5px);
+    }
+    .request-card:nth-child(odd) {
+      margin-right: 10px;
+    }
+    .request-card:nth-child(even) {
+      margin-left: 10px;
+    }
+    .blood-group {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #c62828;
+      margin-bottom: 8px;
+    }
+    .form-section input, .form-section textarea, .form-section button {
+      width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc;
+    }
+    .form-section button {
+      background: #c62828; color: white; border: none; font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .form-section button:hover {
+      background: #a51c1c;
+    }
+    footer { 
+      text-align: center; 
+      padding: 15px; 
+      font-size: 14px; 
+      background: #eee; 
+      margin-top: 20px;
+    }
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; display: flex; justify-content: space-around;
+      border-top: 1px solid #ccc; box-shadow: 0 -1px 6px rgba(0,0,0,0.1);
+      height: 60px; align-items: center;
+      z-index: 1000;
+    }
+    .bottom-nav a {
+      text-align: center; color: #333; text-decoration: none; font-size: 12px;
+      padding: 5px;
+    }
+    .bottom-nav i {
+      font-size: 20px; display: block; margin-bottom: 2px;
+      color: #c62828;
+    }
+    .hidden { display: none; }
+    .success-message {
+      background: #4CAF50;
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 15px 0;
+      text-align: center;
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .request-card {
+        width: 100%;
+        margin: 0 0 15px 0 !important;
+      }
+      .banner {
+        height: 160px;
+        padding: 0 15px;
+      }
+      .banner h2 {
+        font-size: 1.5em;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🩸 RoktoJibonBD</h1>
+  <p>রক্ত দিন, জীবন বাঁচান</p>
+</header>
+
+<div class="banner">
+  <h2>রক্তদাতাদের জন্য একটি বিশ্বস্ত প্ল্যাটফর্ম</h2>
+  <p>জরুরি রক্তের প্রয়োজন হলে আমাদের সাথে যোগাযোগ করুন</p>
+  <a href="https://chat.whatsapp.com/InJq349l6ziC0oM3JKDVJv" target="_blank">WhatsApp গ্রুপে যোগ দিন</a>
+</div>
+
+<div id="home" class="requests-section">
+  <h2>📋 সর্বশেষ রক্তের অনুরোধ</h2>
+  <div id="requests-container" class="requests-container">
+    <!-- Requests will be loaded here from Firebase -->
+  </div>
+</div>
+
+<div id="post" class="form-section hidden">
+  <h2>📝 রক্তের অনুরোধ পোস্ট করুন</h2>
+  <div id="success-message" class="success-message">
+    আপনার রক্তের অনুরোধ সফলভাবে জমা হয়েছে! এটি এখন সব ব্যবহারকারীর হোমপেজে দেখা যাবে।
+  </div>
+  <form id="blood-request-form">
+    <input type="text" name="name" placeholder="আপনার নাম" required>
+    <input type="text" name="group" placeholder="রক্তের গ্রুপ (যেমন: A+)" required>
+    <input type="text" name="location" placeholder="লোকেশন (হাসপাতাল/জেলা)" required>
+    <input type="text" name="date" placeholder="তারিখ (DD-MM-YYYY)" required>
+    <input type="text" name="phone" placeholder="মোবাইল নম্বর" required>
+    <textarea name="details" placeholder="অতিরিক্ত তথ্য" rows="4"></textarea>
+    <button type="submit">রিকোয়েস্ট জমা দিন</button>
+  </form>
+</div>
+
+<div class="bottom-nav">
+  <a href="#" onclick="showSection('home')"><i class="fas fa-home"></i>হোম</a>
+  <a href="#" onclick="showSection('post')"><i class="fas fa-plus-circle"></i>পোস্ট করুন</a>
+  <a href="https://wa.me/8801793585153" target="_blank"><i class="fab fa-whatsapp"></i>যোগাযোগ</a>
+</div>
+
+<footer>&copy; ২০২৫ RoktoJibonBD | Developed by Raim ❤️</footer>
+
+<script>
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDYEWNQ-W93MsfUb6azHF4bz6CzHoLLk60",
+    authDomain: "ak-bazar-92376.firebaseapp.com",
+    databaseURL: "https://ak-bazar-92376-default-rtdb.firebaseio.com",
+    projectId: "ak-bazar-92376",
+    storageBucket: "ak-game-bazar.appspot.com",
+    messagingSenderId: "737177253760",
+    appId: "1:737177253760:android:310fb49a73397f2bedb365"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  // Load requests when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    loadRequests();
+  });
+
+  // Function to show different sections
+  function showSection(id) {
+    document.getElementById('home').classList.add('hidden');
+    document.getElementById('post').classList.add('hidden');
+    document.getElementById(id).classList.remove('hidden');
+    document.getElementById('success-message').style.display = 'none';
+    window.scrollTo(0, 0);
+  }
+
+  // Form submission handler
+  document.getElementById('blood-request-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Get form values
+    const formData = new FormData(this);
+    const request = {
+      name: formData.get('name'),
+      group: formData.get('group'),
+      location: formData.get('location'),
+      date: formData.get('date'),
+      phone: formData.get('phone'),
+      details: formData.get('details'),
+      timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+    
+    // Save to Firebase
+    saveRequest(request);
+    
+    // Show success message
+    document.getElementById('success-message').style.display = 'block';
+    
+    // Reset form
+    this.reset();
+    
+    // Scroll to top
+    window.scrollTo(0, 0);
+  });
+
+  // Function to save request to Firebase
+  function saveRequest(request) {
+    const newRequestRef = database.ref('bloodRequests').push();
+    newRequestRef.set(request)
+      .then(() => console.log("Request saved successfully"))
+      .catch(error => console.error("Error saving request: ", error));
+  }
+
+  // Function to load and display requests from Firebase
+  function loadRequests() {
+    const container = document.getElementById('requests-container');
+    container.innerHTML = '<p>লোড হচ্ছে...</p>';
+    
+    database.ref('bloodRequests').orderByChild('timestamp').limitToLast(50).on('value', (snapshot) => {
+      const requests = [];
+      snapshot.forEach((childSnapshot) => {
+        requests.push({
+          id: childSnapshot.key,
+          ...childSnapshot.val()
+        });
+      });
+      
+      // Reverse to show newest first
+      requests.reverse();
+      
+      displayRequests(requests);
+    });
+  }
+
+  // Function to display requests
+  function displayRequests(requests) {
+    const container = document.getElementById('requests-container');
+    
+    if(requests.length === 0) {
+      container.innerHTML = '<p>কোনো রক্তের অনুরোধ পাওয়া যায়নি। প্রথম অনুরোধটি পোস্ট করুন!</p>';
+      return;
+    }
+    
+    container.innerHTML = '';
+    
+    requests.forEach(request => {
+      const card = document.createElement('div');
+      card.className = 'request-card';
+      card.innerHTML = `
+        <div class="blood-group">🩸 ${request.group}</div>
+        <div><strong>👤 নাম:</strong> ${request.name}</div>
+        <div><strong>📍 লোকেশন:</strong> ${request.location}</div>
+        <div><strong>📅 তারিখ:</strong> ${request.date}</div>
+        <div><strong>📞 যোগাযোগ:</strong> ${request.phone}</div>
+        <div><strong>📝 বিবরণ:</strong> ${request.details || 'N/A'}</div>
+      `;
+      container.appendChild(card);
+    });
+  }
+</script>
+
+</body>
+</html>
